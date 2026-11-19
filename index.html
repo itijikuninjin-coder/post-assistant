@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Klee+One:wght@600&display=swap" rel="stylesheet">
+<title>投稿アシスタント</title>
+<style>
+  :root{--cream:#F8F2E4;--cream2:#FFFDF7;--green:#3F5A3A;--green2:#556B4A;--brown:#7A5C3E;--ink:#33302A;--line:#E3D9C4}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Hiragino Sans","Noto Sans JP",sans-serif;background:var(--cream);color:var(--ink)}
+  header{background:var(--green);color:#fff;padding:14px 16px}
+  header h1{font-size:19px;margin:0;font-family:"Hiragino Mincho ProN","Noto Serif JP",serif;letter-spacing:.04em}
+  header p{margin:4px 0 0;font-size:12.5px;opacity:.92}
+  main{max-width:880px;margin:0 auto;padding:14px 14px 40px;display:grid;gap:16px}
+  @media(min-width:760px){main{grid-template-columns:1fr 1fr;align-items:start}}
+  .card{background:var(--cream2);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .card h2{font-size:15px;margin:0 0 10px;color:var(--green);display:flex;gap:8px;align-items:center}
+  .step{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font-size:13px;align-items:center;justify-content:center;flex:none}
+  label{font-size:13px;font-weight:600;display:block;margin:12px 0 5px}
+  input[type=text],textarea,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;font-size:15px;background:#fff;font-family:inherit}
+  textarea{min-height:56px;resize:vertical}
+  .cats,.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .seg{grid-template-columns:repeat(3,1fr)}
+  .cat,.segbtn{border:2px solid var(--line);background:#fff;border-radius:10px;padding:10px 6px;font-size:13.5px;cursor:pointer;text-align:center;font-family:inherit}
+  .cat.on,.segbtn.on{border-color:var(--green);background:#EFF3E8;font-weight:700;color:var(--green)}
+  .photoPick{display:block;border:2px dashed var(--brown);border-radius:12px;padding:16px;text-align:center;background:#fff;cursor:pointer;font-size:14px}
+  .photoPick input{display:none}
+  .swrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .sw{width:34px;height:34px;border-radius:50%;border:2px solid #cbbfa5;cursor:pointer;padding:0}
+  .sw.on{border-color:var(--green);box-shadow:0 0 0 2px #fff,0 0 0 4px var(--green)}
+  input[type=color]{width:46px;height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:2px}
+  /* preview : 全面写真＋細フレーム */
+  #preview{position:relative;width:100%;aspect-ratio:4/5;background:#DAD2BE center/cover no-repeat;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  #pvFrame{position:absolute;inset:4.2%;border:3px solid #fff;pointer-events:none}
+  #pvText{position:absolute;left:9%;width:82%;text-align:center;pointer-events:none}
+  #pvText.top{top:11%} #pvText.center{top:50%;transform:translateY(-50%)} #pvText.bottom{bottom:11%}
+  #pvLabel{font-size:clamp(12px,3.6vw,17px);letter-spacing:.08em;margin-bottom:6px}
+  #pvTitle{font-size:clamp(22px,7vw,38px);font-weight:700;line-height:1.3;white-space:pre-line;word-break:break-all}
+  #pvTitle.big{font-size:clamp(26px,8.4vw,46px)}
+  #pvSub{font-size:clamp(12px,3.8vw,18px);margin-top:8px;white-space:pre-line}
+  #pvNone{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#8a8069;font-size:13px;text-align:center;padding:12px}
+  .btn{width:100%;border:0;border-radius:11px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:9px}
+  .btn.main{background:var(--green);color:#fff}
+  .btn.sub{background:#fff;border:1.5px solid var(--green);color:var(--green)}
+  .btn.brown{background:var(--brown);color:#fff}
+  .check{display:flex;gap:9px;align-items:flex-start;font-size:14px;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .check:last-child{border-bottom:0}
+  .check input{width:20px;height:20px;margin-top:1px;accent-color:var(--green)}
+  #okMsg{display:none;background:#EFF3E8;border:1px solid var(--green2);color:var(--green);border-radius:10px;padding:10px;font-size:14px;font-weight:700;text-align:center;margin-top:10px}
+  .note{font-size:12px;color:#6d675a;line-height:1.6}
+  #captionOut{white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px;font-size:13.5px;line-height:1.7;min-height:120px}
+</style>
+</head>
+<body>
+<header>
+  <h1>📸 投稿アシスタント</h1>
+  <p>どのお店でも使えます。全面写真＋白い上下ライン＋中央の文字。<br>ライン・色・フォントはお店の様式に合わせて選べます<br>※ Museを入れていないスマホでも使えます（ファイルを開くだけ）</p>
+</header>
+<main>
+  <section class="card">
+    <h2><span class="step">1</span>写真と文字</h2>
+    <label class="photoPick">📷 写真を選ぶ（タップ）
+      <input type="file" id="photo" accept="image/*">
+    </label>
+    <label>お店の設定（最初に1回だけ）</label>
+    <input type="text" id="shop" placeholder="店名（例）○○商店">
+    <input type="text" id="tags" placeholder="いつも使うハッシュタグ（任意・スペース区切り）" style="margin-top:8px">
+    <p class="note">店名は投稿文のハッシュタグになります。入力はこの端末に保存されます。</p>
+    <label>投稿の種類（小さい文字になります）</label>
+    <div class="cats" id="cats">
+      <button type="button" class="cat on" data-cat="menu">🍽 おすすめ・メニュー</button>
+      <button type="button" class="cat" data-cat="harvest">🏠 日常・店内の様子</button>
+      <button type="button" class="cat" data-cat="event">🎪 イベント</button>
+      <button type="button" class="cat" data-cat="news">🌿 季節限定・お知らせ</button>
+    </div>
+    <label>タイトル（大きい文字・改行できます）</label>
+    <textarea id="title" placeholder="例：新商品の&#10;ご紹介です" maxlength="60"></textarea>
+    <label>一言メモ（投稿文のもとになります）</label>
+    <textarea id="memo" placeholder="例：今日の様子や、おすすめポイントを一言で"></textarea>
+    <label>小さい文字・日付など（必要な時だけ／写真と投稿文に入ります）</label>
+    <input type="text" id="extra" placeholder="例：詳しくはキャプションへ ／ 11月22日（土）開催">
+    <p class="note">※ 値段・時間・メニュー名は、お店で確認したものだけを入れてください。分からない時は空のままで大丈夫です。</p>
+
+    <h2 style="margin-top:18px"><span class="step">2</span>見た目を選ぶ</h2>
+    <label>フォント</label>
+    <div class="seg" id="fontSeg" style="grid-template-columns:1fr 1fr">
+      <button type="button" class="segbtn" data-font="mincho" style="font-family:'Hiragino Mincho ProN','Noto Serif JP',serif">明朝体</button>
+      <button type="button" class="segbtn on" data-font="gothic">ゴシック体</button>
+      <button type="button" class="segbtn" data-font="maru">丸ゴシック</button>
+      <button type="button" class="segbtn" data-font="tegaki" style="font-family:'Yomogi','Kaisei Decol',cursive">手書き風</button>
+    </div>
+    <label>ラインの様式</label>
+    <div class="seg" id="frameSeg">
+      <button type="button" class="segbtn on" data-frame="tb">上下2本（今の様式）</button>
+      <button type="button" class="segbtn" data-frame="box">四角フレーム</button>
+      <button type="button" class="segbtn" data-frame="none">ラインなし</button>
+    </div>
+    <label>ラインの色</label>
+    <div class="swrow" data-sw="frame"></div>
+    <label>文字の色</label>
+    <div class="swrow" data-sw="text"></div>
+    <label>文字の位置</label>
+    <div class="seg" id="posSeg">
+      <button type="button" class="segbtn" data-pos="top">上</button>
+      <button type="button" class="segbtn on" data-pos="center">中央</button>
+      <button type="button" class="segbtn" data-pos="bottom">下</button>
+    </div>
+    <label>文字の大きさ</label>
+    <div class="seg" id="sizeSeg" style="grid-template-columns:1fr 1fr">
+      <button type="button" class="segbtn on" data-size="std">標準</button>
+      <button type="button" class="segbtn" data-size="big">大きめ</button>
+    </div>
+    <label class="check"><input type="checkbox" id="shadow" checked> 文字に白いフチをつける（お店の様式）</label>
+    <label class="check"><input type="checkbox" id="handLine" checked> ラインを手書き風（ゆらぎ・かすれ・たまに2重）にする</label>
+  </section>
+
+  <div style="display:grid;gap:16px">
+    <section class="card">
+      <h2><span class="step">3</span>できあがりイメージ</h2>
+      <div id="preview">
+        <div id="pvNone">写真を選ぶと<br>ここに表示されます</div>
+        <svg id="pvLines" viewBox="0 0 400 500" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;display:none;pointer-events:none"></svg>
+        <div id="pvFrame"></div>
+        <div id="pvText" class="center">
+          <div id="pvLabel">おすすめメニュー</div>
+          <div id="pvTitle">タイトルが入ります</div>
+          <div id="pvSub"></div>
+        </div>
+      </div>
+      <button class="btn main" id="dlBtn" type="button">⬇ 投稿画像を保存する（1080×1350）</button>
+      <p class="note">保存した画像を Instagram に載せて、下の文章を貼れば投稿できます。このアプリはMuseが無くても使えます（作る・直す時だけMuse）。データはこの端末の中だけにあります。</p>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">4</span>投稿文（自動で作ります）</h2>
+      <div id="captionOut"></div>
+      <button class="btn sub" id="copyCap" type="button">📋 投稿文をコピー</button>
+      <button class="btn brown" id="copyPrompt" type="button">🤖 Museに整えてもらう文をコピー</button>
+      <p class="note">「Museに整えてもらう文」は、お店のClaude／Museに貼るだけで、文章をやさしく整えた案が返ってきます。</p>
+    </section>
+
+    <section class="card">
+      <h2><span class="step">5</span>投稿前の30秒チェック</h2>
+      <label class="check"><input type="checkbox" class="chk"> お客さまの顔が写っている写真は、許可をもらいましたか／写っていませんか</label>
+      <label class="check"><input type="checkbox" class="chk"> 値段・時間・日付は、今日の内容と合っていますか</label>
+      <label class="check"><input type="checkbox" class="chk"> タイトルの字は間違っていませんか</label>
+      <div id="okMsg">✅ OKです。そのまま投稿できます</div>
+      <p class="note">困った時・クレームっぽい内容は、投稿せずに店長へ。ここだけは守ってください。</p>
+    </section>
+  </div>
+</main>
+<canvas id="cv" width="1080" height="1350" style="display:none"></canvas>
+<script>
+const CATS={
+ menu:{label:"おすすめ",tags:"#おすすめ #メニュー",body:m=>`${m}`},
+ harvest:{label:"日常・店内の様子",tags:"#日常 #店内",body:m=>`${m}`},
+ event:{label:"イベント",tags:"#イベント #お知らせ",body:m=>`${m}`},
+ news:{label:"季節限定・お知らせ",tags:"#季節限定 #期間限定",body:m=>`${m}`}
+};
+const FONTS={
+ mincho:"'Hiragino Mincho ProN','Yu Mincho','Noto Serif JP',serif",
+ gothic:"'Hiragino Sans','Yu Gothic','Noto Sans JP',sans-serif",
+ maru:"'Hiragino Maru Gothic ProN','M PLUS Rounded 1c','Yu Gothic','Noto Sans JP',sans-serif",
+ tegaki:"'Yomogi','Kaisei Decol','Klee One','Hiragino Maru Gothic ProN',cursive"
+};
+const SWATCHES=["#FFFFFF","#F8F2E4","#3F5A3A","#7A5C3E","#C1272D","#E8833A","#2E8C9C","#E56B9F","#33302A"];
+let cat="menu", imgObj=null, imgURL="";
+let font="gothic", frameColor="#FFFFFF", textColor="#C1272D", pos="center", size="std", frameStyle="tb";
+const $=id=>document.getElementById(id);
+function lum(hex){const n=parseInt(hex.slice(1),16),r=n>>16&255,g=n>>8&255,b=n&255;return (0.299*r+0.587*g+0.114*b)/255;}
+function shadowCSS(){
+  if(!$("shadow").checked) return "none";
+  const ec = lum(textColor)>0.9 ? "rgba(96,84,66,.75)" : "#FFFFFF";
+  return `2px 0 0 ${ec},-2px 0 0 ${ec},0 2px 0 ${ec},0 -2px 0 ${ec},1.5px 1.5px 0 ${ec},-1.5px 1.5px 0 ${ec},1.5px -1.5px 0 ${ec},-1.5px -1.5px 0 ${ec},0 3px 7px rgba(0,0,0,.18)`;
+}
+function rnd(n){const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+function hexRgb(hex){const n=parseInt(hex.slice(1),16);return [n>>16&255,n>>8&255,n&255];}
+function waveY(x,base){return base+Math.sin(x*0.017)*1.1+Math.sin(x*0.005+1.7)*1.5;}
+function roughLineSVG(base){
+  let out="";const step=10;
+  for(let x=0,i=0;x<400;x+=step,i++){
+    if(rnd(base+i*3.1)<0.05) continue; // たまに途切れる（かすれ）
+    const a=(0.5+rnd(base+i*7.7)*0.5).toFixed(2), w=(1.0+rnd(base+i*5.3)*0.8).toFixed(2);
+    out+=`<path d="M${x} ${waveY(x*2.7,base).toFixed(1)} L${x+step+1.5} ${waveY((x+step)*2.7,base).toFixed(1)}" stroke="${frameColor}" stroke-width="${w}" stroke-opacity="${a}" stroke-linecap="round" fill="none"/>`;
+  }
+  // たまに2重になる区間
+  [[40+rnd(base)*80,150+rnd(base*2)*110],[230+rnd(base*3)*60,120+rnd(base*5)*90]].forEach(([sx,len],k)=>{
+    let d="";for(let x=sx;x<=sx+len;x+=12){d+=(x===sx?"M":"L")+x.toFixed(1)+" "+(waveY(x*2.7,base)+3.2).toFixed(1)+" ";}
+    out+=`<path d="${d}" stroke="${frameColor}" stroke-width="0.8" stroke-opacity="0.45" fill="none" stroke-linecap="round"/>`;
+  });
+  return out;
+}
+function caption(){
+  const memo=$("memo").value.trim()||"（一言メモを入れると、ここに文章ができます）";
+  const extra=$("extra").value.trim();
+  const shop=$("shop").value.trim(), utags=$("tags").value.trim();
+  let t=CATS[cat].body(memo);
+  if(extra) t+="\n"+extra;
+  const tags=[];
+  if(shop)tags.push("#"+shop.replace(/\s/g,""));
+  tags.push(...CATS[cat].tags.split(" "));
+  if(utags)utags.split(/[\s　]+/).filter(Boolean).forEach(x=>tags.push(x.startsWith("#")?x:"#"+x));
+  return t+"\n\n"+tags.join(" ");
+}
+function buildSwatches(){
+  document.querySelectorAll("[data-sw]").forEach(row=>{
+    const target=row.dataset.sw;
+    SWATCHES.forEach(c=>{
+      const b=document.createElement("button");b.type="button";b.className="sw";b.style.background=c;b.dataset.color=c;b.dataset.target=target;
+      b.onclick=()=>{if(target==="frame")frameColor=c;else textColor=c;syncColorInputs();render();};
+      row.appendChild(b);
+    });
+    const inp=document.createElement("input");inp.type="color";inp.id=target+"ColorInput";
+    inp.value=target==="frame"?frameColor:textColor;
+    inp.oninput=()=>{if(target==="frame")frameColor=inp.value;else textColor=inp.value;render();};
+    row.appendChild(inp);
+    const cap=document.createElement("span");cap.className="note";cap.textContent="自由な色 →";row.insertBefore(cap,inp);
+  });
+}
+function syncColorInputs(){
+  const f=$("frameColorInput"),t=$("textColorInput");
+  if(f)f.value=frameColor; if(t)t.value=textColor;
+}
+function render(){
+  $("pvLabel").textContent=CATS[cat].label;
+  $("pvTitle").textContent=$("title").value.trim()||"タイトルが入ります";
+  $("pvSub").textContent=$("extra").value.trim();
+  if(imgURL){$("preview").style.backgroundImage=`url(${imgURL})`;$("pvNone").style.display="none";}
+  const pf=$("pvFrame"), svg=$("pvLines");
+  pf.style.border="none";pf.style.inset="4.2%";
+  const wavy = frameStyle==="tb" && $("handLine").checked;
+  if(frameStyle==="box"){pf.style.border="3px solid "+frameColor;}
+  else if(frameStyle==="tb"&&!wavy){pf.style.inset="10% 0";pf.style.borderTop="3px solid "+frameColor;pf.style.borderBottom="3px solid "+frameColor;}
+  pf.style.display=(frameStyle==="none"||wavy)?"none":"block";
+  if(wavy){svg.style.display="block";svg.innerHTML=roughLineSVG(50)+roughLineSVG(450);}
+  else svg.style.display="none";
+  const tx=$("pvText");
+  tx.className=pos;
+  tx.style.color=textColor; tx.style.fontFamily=FONTS[font]; tx.style.textShadow=shadowCSS();
+  $("pvTitle").classList.toggle("big",size==="big");
+  document.querySelectorAll(".sw").forEach(s=>{
+    const cur=s.dataset.target==="frame"?frameColor:textColor;
+    s.classList.toggle("on",s.dataset.color.toLowerCase()===cur.toLowerCase());
+  });
+  $("captionOut").textContent=caption();
+  const all=[...document.querySelectorAll(".chk")].every(c=>c.checked);
+  $("okMsg").style.display=all?"block":"none";
+}
+document.querySelectorAll(".cat").forEach(b=>b.onclick=()=>{cat=b.dataset.cat;document.querySelectorAll(".cat").forEach(x=>x.classList.toggle("on",x===b));render();});
+function seg(id,attr,fn){document.querySelectorAll("#"+id+" .segbtn").forEach(b=>b.onclick=()=>{fn(b.dataset[attr]);document.querySelectorAll("#"+id+" .segbtn").forEach(x=>x.classList.toggle("on",x===b));render();});}
+seg("fontSeg","font",v=>font=v); seg("posSeg","pos",v=>pos=v); seg("sizeSeg","size",v=>size=v); seg("frameSeg","frame",v=>frameStyle=v);
+$("photo").onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  imgURL=URL.createObjectURL(f); imgObj=new Image(); imgObj.onload=render; imgObj.src=imgURL; render();
+};
+["title","memo","extra"].forEach(id=>$(id).addEventListener("input",render));
+$("shadow").addEventListener("change",render);
+$("handLine").addEventListener("change",render);
+$("shop").value=localStorage.getItem("pa_shop")||"";
+$("tags").value=localStorage.getItem("pa_tags")||"";
+$("shop").addEventListener("input",()=>{localStorage.setItem("pa_shop",$("shop").value);render();});
+$("tags").addEventListener("input",()=>{localStorage.setItem("pa_tags",$("tags").value);render();});
+document.querySelectorAll(".chk").forEach(c=>c.addEventListener("change",render));
+$("copyCap").onclick=async()=>{await navigator.clipboard.writeText(caption());$("copyCap").textContent="✅ コピーしました";setTimeout(()=>$("copyCap").textContent="📋 投稿文をコピー",1600);};
+$("copyPrompt").onclick=async()=>{
+  const p=`${$("shop").value.trim()||"お店"}のInstagram投稿文を整えてください。\n種類：${CATS[cat].label}\nタイトル案：${$("title").value.trim()||"（未定。案を3つください）"}\n一言メモ：${$("memo").value.trim()}\n条件：やさしい言い方で、誇張はしない。値段・時間・メニュー名はメモに無いものを勝手に作らない。文章は3〜5行＋ハッシュタグ。まず案を1つ出してください。`;
+  await navigator.clipboard.writeText(p);$("copyPrompt").textContent="✅ コピーしました。Museに貼ってください";setTimeout(()=>$("copyPrompt").textContent="🤖 Museに整えてもらう文をコピー",2000);};
+function wrapLines(ctx,text,maxW){
+  const out=[];
+  text.split("\n").forEach(part=>{
+    let line="";
+    for(const ch of part){if(ctx.measureText(line+ch).width>maxW&&line){out.push(line);line=ch;}else line+=ch;}
+    out.push(line);
+  });
+  return out;
+}
+$("dlBtn").onclick=()=>{
+  const cv=$("cv"),ctx=cv.getContext("2d");
+  // 全面写真
+  if(imgObj&&imgObj.complete){
+    const s=Math.max(1080/imgObj.width,1350/imgObj.height),w=imgObj.width*s,h=imgObj.height*s;
+    ctx.drawImage(imgObj,(1080-w)/2,(1350-h)/2,w,h);
+  }else{ctx.fillStyle="#DAD2BE";ctx.fillRect(0,0,1080,1350);ctx.fillStyle="#8a8069";ctx.font="34px sans-serif";ctx.textAlign="center";ctx.fillText("写真（試作では未選択）",540,675);}
+  // ライン（様式で切替）
+  ctx.strokeStyle=frameColor;ctx.lineWidth=5;
+  if(frameStyle==="box"){ctx.strokeRect(46,46,1080-92,1350-92);}
+  else if(frameStyle==="tb"){
+    const wY=(x,b)=>b+Math.sin(x*0.017)*3+Math.sin(x*0.005+1.7)*4;
+    const roughLine=(base)=>{
+      if(!$("handLine").checked){ctx.beginPath();ctx.moveTo(0,base);ctx.lineTo(1080,base);ctx.stroke();return;}
+      const fc=hexRgb(frameColor), step=24;
+      ctx.save();ctx.lineCap="round";
+      for(let x=0,i=0;x<1080;x+=step,i++){
+        if(rnd(base+i*3.1)<0.05) continue;
+        ctx.strokeStyle=`rgba(${fc[0]},${fc[1]},${fc[2]},${(0.5+rnd(base+i*7.7)*0.5).toFixed(2)})`;
+        ctx.lineWidth=3.6+rnd(base+i*5.3)*2.6;
+        ctx.beginPath();ctx.moveTo(x,wY(x,base));ctx.lineTo(x+step+3,wY(x+step,base));ctx.stroke();
+      }
+      [[110+rnd(base)*220,420+rnd(base*2)*300],[640+rnd(base*3)*160,330+rnd(base*5)*240]].forEach(([sx,len])=>{
+        ctx.strokeStyle=`rgba(${fc[0]},${fc[1]},${fc[2]},0.45)`;ctx.lineWidth=2.2;ctx.beginPath();
+        for(let x=sx;x<=sx+len;x+=30){const y=wY(x,base)+9;if(x===sx)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
+        ctx.stroke();
+      });
+      ctx.restore();
+    };
+    roughLine(135); roughLine(1215);
+  }
+  // 文字
+  const fam=FONTS[font];
+  const titleSize=size==="big"?104:88;
+  ctx.textAlign="center";ctx.fillStyle=textColor;
+  const edgeOn=$("shadow").checked;
+  const edgeColor=lum(textColor)>0.9?"rgba(96,84,66,0.8)":"#FFFFFF";
+  const drawT=(text,ty,fpx,weight)=>{
+    ctx.font=`${weight} ${fpx}px ${fam}`;
+    if(edgeOn){ctx.save();ctx.lineJoin="round";ctx.miterLimit=2;ctx.strokeStyle=edgeColor;ctx.lineWidth=Math.max(3,fpx*0.11);ctx.strokeText(text,540,ty);ctx.restore();}
+    ctx.fillText(text,540,ty);
+  };
+  const label=CATS[cat].label;
+  ctx.font=`700 ${titleSize}px ${fam}`;
+  const lines=wrapLines(ctx,$("title").value.trim()||"タイトルが入ります",860);
+  const sub=$("extra").value.trim();
+  const lh=titleSize*1.32, blockH=40+26+lines.length*lh+(sub?26+44:0);
+  let y = pos==="top"?150 : pos==="center"?(1350-blockH)/2 : 1350-blockH-150;
+  drawT(label,y+40,40,500);
+  lines.forEach((l,i)=>drawT(l,y+66+lh*(i+1)-(titleSize*0.18),titleSize,700));
+  if(sub)drawT(sub,y+66+lh*lines.length+58,40,500);
+  const a=document.createElement("a");a.download="minanme-post.png";a.href=cv.toDataURL("image/png");a.click();
+};
+buildSwatches(); syncColorInputs(); render();
+</script>
+</body>
+</html>
