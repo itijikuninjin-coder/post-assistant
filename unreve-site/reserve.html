@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ご予約｜un rêve エステティックサロン</title>
+<meta name="description" content="un rêve（アン・レーヴ）のWeb予約ページ。メニューを選んで、空き状況から予約できます。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Shippori+Mincho:wght@400;500&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  body{display:flex;flex-direction:column;min-height:100svh}
+  .rv-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px clamp(16px,4vw,40px);border-bottom:1px solid var(--line);background:var(--bg)}
+  .rv-head .logo-main{color:var(--accent)}
+  .rv-back{font-size:13px;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:8px 16px;white-space:nowrap}
+  .rv-back:hover{background:var(--accent);color:#fff}
+  .rv-frame{flex:1;display:flex;flex-direction:column}
+  .rv-frame iframe{flex:1;width:100%;min-height:calc(100svh - 120px);border:0;background:var(--bg)}
+  .rv-note{font-size:11.5px;color:var(--ink2);text-align:center;padding:10px 16px 18px}
+  .rv-note a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+</style>
+</head>
+<body>
+<header class="rv-head">
+  <a href="index.html" class="logo" aria-label="un rêve トップへ">
+    <span class="logo-main">un rêve</span>
+    <span class="logo-sub">esthétique salon</span>
+  </a>
+  <a href="index.html" class="rv-back">← トップへ戻る</a>
+</header>
+<main class="rv-frame">
+  <iframe src="https://script.google.com/macros/s/AKfycbyVlb3L_6fU7e0awhnahnGbkHigJy0oTBDQjTmpHWzd3mR0malqCs3Lzs90U6T3pOqudg/exec?p=aki" title="un rêve ご予約フォーム" loading="eager"></iframe>
+  <p class="rv-note">予約画面がうまく表示されないときは <a href="https://script.google.com/macros/s/AKfycbyVlb3L_6fU7e0awhnahnGbkHigJy0oTBDQjTmpHWzd3mR0malqCs3Lzs90U6T3pOqudg/exec?p=aki" target="_blank" rel="noopener">こちら</a> から、またはLINEでご連絡ください。</p>
+</main>
+</body>
+</html>
