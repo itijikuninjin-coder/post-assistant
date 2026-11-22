@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全商簿記1級 原価計算 試験対策ツール</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0;}
+body { font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif; background: #f4f6f3; color: #243020; padding: 16px; max-width: 720px; margin: 0 auto;}
+h1 { font-size: 22px; text-align: center; padding: 14px 0 4px; color: #2e5b34;}
+.sub { text-align: center; font-size: 13px; color: #6b7a68; margin-bottom: 14px;}
+.card { background: #fff; border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06);}
+.score-big { font-size: 40px; font-weight: bold; text-align: center; color: #2e5b34;}
+.score-label { text-align: center; font-size: 13px; color: #6b7a68;}
+table.cat { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px;}
+table.cat td, table.cat th { padding: 7px 6px; border-bottom: 1px solid #e6ece4; text-align: left;}
+table.cat td:last-child, table.cat th:last-child { text-align: right; font-weight: bold;}
+.btn { display: block; width: 100%; padding: 16px; margin: 10px 0; border: none; border-radius: 12px; font-size: 17px; font-weight: bold; cursor: pointer;}
+.btn-main { background: #2e5b34; color: #fff;}
+.btn-sub { background: #e8efe6; color: #2e5b34;}
+.btn-review { background: #b3541e; color: #fff;}
+.btn:disabled { opacity:.35; cursor: default;}
+.qmeta { display: flex; justify-content: space-between; font-size: 13px; color: #6b7a68; margin-bottom: 8px;}
+.qcat { background: #e8efe6; color: #2e5b34; padding: 2px 10px; border-radius: 999px; font-weight: bold;}
+.qtext { font-size: 18px; line-height: 1.7; margin-bottom: 14px; white-space: pre-wrap;}
+.choice { display: block; width: 100%; text-align: left; padding: 14px 16px; margin: 8px 0; border: 2px solid #d8e2d4; border-radius: 12px; background: #fff; font-size: 17px; cursor: pointer;}
+.choice.correct { border-color: #2e9e4f; background: #e9f7ee;}
+.choice.wrong { border-color: #d33; background: #fdeeee;}
+.choice:disabled { cursor: default; color: #243020;}
+.result { font-size: 20px; font-weight: bold; margin: 12px 0 6px;}
+.result.ok { color: #2e9e4f;}.result.ng { color: #d33;}
+.explain { background: #f7f3e8; border-left: 5px solid #c9a227; padding: 12px 14px; border-radius: 8px; font-size: 15px; line-height: 1.8; white-space: pre-wrap;}
+.hidden { display: none;}
+.small { font-size: 12px; color: #8a9787; text-align: center; margin-top: 10px;}
+.reset { background: none; border: none; color: #b3541e; font-size: 13px; cursor: pointer; text-decoration: underline; display: block; margin: 6px auto;}
+</style>
+</head>
+<body>
+<h1>全商簿記1級 原価計算</h1>
+<p class="sub">試験対策ツール ／ 間違えた問題は自動で復習リストに入ります</p>
+
+<!-- ホーム -->
+<div id="home">
+<div class="card">
+<div class="score-label">これまでの正解率</div>
+<div class="score-big" id="totalRate">―</div>
+<div class="score-label" id="totalCount"></div>
+<table class="cat" id="catTable"></table>
+</div>
+<div class="card">
+<button class="btn btn-main" onclick="startQuiz('all')">全問に挑戦（全25問・ランダム）</button>
+<button class="btn btn-sub" onclick="showCats()">カテゴリ別に解く</button>
+<div id="catBtns" class="hidden"></div>
+<button class="btn btn-review" id="reviewBtn" onclick="startQuiz('review')">間違い復習（<span id="reviewCount">0</span>問）</button>
+<p class="small">復習で正解すると、リストから外れます</p>
+</div>
+<button class="reset" onclick="resetAll()">記録をすべてリセット</button>
+</div>
+
+<!-- クイズ -->
+<div id="quiz" class="hidden">
+<div class="card">
+<div class="qmeta"><span class="qcat" id="qCat"></span><span id="qProg"></span></div>
+<div class="qtext" id="qText"></div>
+<div id="choices"></div>
+<div id="feedback" class="hidden">
+<div class="result" id="resultMark"></div>
+<div class="explain" id="explainText"></div>
+<button class="btn btn-main" id="nextBtn" onclick="nextQ()">次の問題へ</button>
+</div>
+</div>
+<button class="btn btn-sub" onclick="goHome()">やめてホームに戻る</button>
+</div>
+
+<!-- 結果 -->
+<div id="finish" class="hidden">
+<div class="card">
+<div class="score-label">今回の正解率</div>
+<div class="score-big" id="finRate"></div>
+<div class="score-label" id="finCount"></div>
+</div>
+<button class="btn btn-main" onclick="goHome()">ホームに戻る</button>
+</div>
+
+<script>
+const QUESTIONS = [
+// ===== 材料費・労務費・経費 =====
+{cat:"材料費", q:"期首材料棚卸高100kg（単価50円）、当月購入300kg（単価60円）、当月消費250kg。先入先出法による当月材料消費額はいくらか。",
+choices:["14,000円","14,375円","15,000円","12,500円"], ans:0,
+ex:"先入先出法は、古いものから消費したと考える。\n100kg×50円＋150kg×60円＝5,000＋9,000＝14,000円。\n月末は新しい150kg×60円＝9,000円が残る。"},
+{cat:"材料費", q:"期首材料棚卸高100kg（単価50円）、当月購入300kg（単価60円）、当月消費250kg。総平均法による当月材料消費額はいくらか。",
+choices:["14,000円","14,375円","15,000円","13,750円"], ans:1,
+ex:"総平均単価＝（100×50＋300×60）÷（100＋300）＝23,000÷400＝57.5円。\n消費額＝250kg×57.5円＝14,375円。"},
+{cat:"材料費", q:"材料の帳簿棚卸数量は500kg、実地棚卸数量は480kg、材料単価は100円であった。棚卸減耗費はいくらか（処理は製造間接費とする）。",
+choices:["1,000円","2,000円","4,800円","5,000円"], ans:1,
+ex:"減耗数量＝500−480＝20kg。\n棚卸減耗費＝20kg×100円＝2,000円。\n正常な減耗は製造間接費として処理する。"},
+{cat:"労務費", q:"ある作業員の当月の作業時間は直接作業160時間、間接作業20時間、賃率は1時間1,200円であった。直接労務費はいくらか。",
+choices:["216,000円","192,000円","24,000円","180,000円"], ans:1,
+ex:"消費賃金総額＝180時間×1,200円＝216,000円。\nこのうち直接作業分 160時間×1,200円＝192,000円が直接労務費。\n間接作業分24,000円は製造間接費になる。"},
+// ===== 製造間接費の配賦 =====
+{cat:"製造間接費", q:"当月の製造間接費予算は1,200,000円、予定配賦基準は直接作業時間1,000時間である。ある製品の実際直接作業時間が90時間のとき、予定配賦額はいくらか。",
+choices:["90,000円","108,000円","120,000円","100,000円"], ans:1,
+ex:"予定配賦率＝1,200,000円÷1,000時間＝1,200円/時間。\n予定配賦額＝1,200円×90時間＝108,000円。"},
+{cat:"製造間接費", q:"製造間接費の実際発生額は115,000円、予定配賦額は108,000円であった。配賦差異とその有利・不利の正しい組み合わせはどれか。",
+choices:["7,000円の有利差異","7,000円の不利差異","23,000円の不利差異","差異なし"], ans:1,
+ex:"配賦差異＝実際発生額−予定配賦額＝115,000−108,000＝7,000円。\n実際が予定より多い＝配賦不足なので「不利差異（借方差異）」。"},
+// ===== 個別原価計算 =====
+{cat:"個別原価計算", q:"指図書No.101の原価資料：直接材料費30,000円、直接労務費20,000円、直接経費5,000円、製造間接費配賦額15,000円。完成数量100個のとき、製品1個あたりの原価はいくらか。",
+choices:["550円","650円","700円","750円"], ans:2,
+ex:"製造原価＝30,000＋20,000＋5,000＋15,000＝70,000円。\n単位原価＝70,000円÷100個＝700円。"},
+{cat:"個別原価計算", q:"ある指図書の総製造費用は500,000円であったが、作業くずの評価額が30,000円あった。作業くず評価額を控除した後の製品原価はいくらか。",
+choices:["530,000円","500,000円","470,000円","440,000円"], ans:2,
+ex:"作業くずの評価額は、その発生した指図書の製造原価から控除する。\n500,000−30,000＝470,000円。"},
+// ===== 総合原価計算 =====
+{cat:"総合原価計算", q:"期首仕掛品200個（材料費40,000円）、当月投入1,800個（材料費360,000円）、完成品1,600個、月末仕掛品400個。材料は始点で全量投入される。完成品材料費はいくらか。",
+choices:["320,000円","360,000円","288,000円","400,000円"], ans:0,
+ex:"平均単価＝（40,000＋360,000）÷（200＋1,800）＝400,000÷2,000＝200円。\n完成品材料費＝1,600個×200円＝320,000円。\n月末仕掛品材料費は400個×200円＝80,000円。"},
+{cat:"総合原価計算", q:"期首仕掛品200個（材料費46,000円）、当月投入1,800個（材料費360,000円）、完成品1,600個、月末仕掛品400個。材料は始点投入。完成品材料費はいくらか。",
+choices:["320,000円","326,000円","314,000円","336,000円"], ans:1,
+ex:"先入先出法では完成品は期首分から先に完成したと考える。\n当月投入分の単価＝360,000÷1,800＝200円。\n完成品＝期首分46,000円＋（1,600−200）個×200円＝46,000＋280,000＝326,000円。"},
+{cat:"総合原価計算", q:"期首仕掛品300個（進捗度60%、加工費54,000円）、当月投入1,700個、当月加工費286,000円、完成品1,500個、月末仕掛品500個（進捗度40%）。完成品加工費はいくらか。",
+choices:["286,000円","294,000円","300,000円","340,000円"], ans:2,
+ex:"完成換算量の合計＝完成1,500個＋月末500個×40%＝1,500＋200＝1,700個。\n加工費合計＝54,000＋286,000＝340,000円。\n単位加工費＝340,000÷1,700＝200円。\n完成品加工費＝1,500個×200円＝300,000円。"},
+{cat:"総合原価計算", q:"A製品1,000個（等価係数1）、B製品500個（等価係数2）を生産し、総原価は600,000円であった。B製品1個あたりの原価はいくらか。",
+choices:["300円","400円","600円","1,200円"], ans:2,
+ex:"積数：A＝1,000個×1＝1,000、B＝500個×2＝1,000、合計2,000。\n積数1あたり原価＝600,000÷2,000＝300円。\nB単位原価＝300円×係数2＝600円（Aは300円）。"},
+{cat:"総合原価計算", q:"第1工程の工程費は200,000円で完成1,000個、第2工程では第1工程完成品を全量投入し加工費150,000円がかかり1,000個完成した。完成品1個あたりの原価はいくらか。",
+choices:["150円","200円","350円","300円"], ans:2,
+ex:"累加法では前工程費が次工程へ振り替わる。\n完成品原価＝前工程費200,000＋第2工程加工費150,000＝350,000円。\n単位原価＝350,000÷1,000個＝350円。"},
+{cat:"総合原価計算", q:"当月投入1,000個、完成品900個、正常仕損品100個、月末仕掛品なし。当月総原価450,000円のとき、完成品1個あたりの原価はいくらか。",
+choices:["450円","500円","405円","550円"], ans:1,
+ex:"度外視法は仕損費を良品（完成品）が負担する方法。\n完成品単位原価＝450,000円÷900個＝500円。\n仕損品には原価を配分しない。"},
+{cat:"総合原価計算", q:"当月投入1,000個、完成品900個、正常仕損品100個、月末仕掛品なし。当月総原価450,000円のとき、完成品原価はいくらか。",
+choices:["450,000円","405,000円","500,000円","360,000円"], ans:1,
+ex:"非度外視法は仕損品にも原価を負担させる。\n単位原価＝450,000÷1,000個＝450円。\n完成品原価＝900個×450円＝405,000円。\n仕損品原価45,000円と仕損品評価額との差額が仕損費になる。"},
+// ===== 標準原価計算 =====
+{cat:"標準原価計算", q:"材料の標準価格は1kgあたり500円、実際価格は520円、実際消費量は1,000kgであった。材料費価格差異はいくらか。",
+choices:["20,000円の有利差異","20,000円の不利差異","10,000円の不利差異","差異なし"], ans:1,
+ex:"価格差異＝（標準価格−実際価格）×実際消費量\n＝（500−520）×1,000＝−20,000円 → 20,000円の不利差異。\n実際価格が高いと不利になる。"},
+{cat:"標準原価計算", q:"製品1,000個生産に対する材料の標準消費量は950kg、実際消費量は1,000kg、標準価格は1kgあたり500円であった。材料費数量差異はいくらか。",
+choices:["25,000円の有利差異","25,000円の不利差異","50,000円の不利差異","20,000円の不利差異"], ans:1,
+ex:"数量差異＝（標準消費量−実際消費量）×標準価格\n＝（950−1,000）×500＝−25,000円 → 25,000円の不利差異。\n使いすぎは不利差異になる。"},
+{cat:"標準原価計算", q:"標準賃率は1時間1,000円、実際賃率は1,050円、実際作業時間は200時間、標準作業時間は190時間であった。直接労務費の賃率差異はいくらか。",
+choices:["10,000円の有利差異","10,000円の不利差異","9,500円の不利差異","差異なし"], ans:1,
+ex:"賃率差異＝（標準賃率−実際賃率）×実際作業時間\n＝（1,000−1,050）×200＝−10,000円 → 10,000円の不利差異。\nなお時間差異＝（190−200）×1,000＝10,000円の不利差異。"},
+// ===== 直接原価計算・CVP =====
+{cat:"直接原価計算", q:"販売単価1,000円、製品1個あたり変動費600円のとき、貢献利益と貢献利益率の正しい組み合わせはどれか。",
+choices:["貢献利益400円・40%","貢献利益600円・60%","貢献利益400円・60%","貢献利益1,600円・40%"], ans:0,
+ex:"貢献利益＝販売単価−変動費＝1,000−600＝400円。\n貢献利益率＝400÷1,000＝40%。"},
+{cat:"直接原価計算", q:"固定費が月1,200,000円、貢献利益率が40%のとき、損益分岐点売上高はいくらか。",
+choices:["480,000円","1,200,000円","3,000,000円","2,000,000円"], ans:2,
+ex:"損益分岐点売上高＝固定費÷貢献利益率\n＝1,200,000÷0.4＝3,000,000円。"},
+{cat:"直接原価計算", q:"実際売上高4,000,000円、損益分岐点売上高3,000,000円のとき、安全余裕率はいくらか。",
+choices:["75%","33%","25%","20%"], ans:2,
+ex:"安全余裕率＝（実際売上高−損益分岐点売上高）÷実際売上高\n＝（4,000,000−3,000,000）÷4,000,000＝25%。"},
+{cat:"直接原価計算", q:"固定費1,200,000円、貢献利益率40%の会社が、目標利益600,000円を達成するために必要な売上高はいくらか。",
+choices:["3,000,000円","4,500,000円","1,800,000円","5,000,000円"], ans:1,
+ex:"必要売上高＝（固定費＋目標利益）÷貢献利益率\n＝（1,200,000＋600,000）÷0.4＝4,500,000円。"},
+// ===== 基礎・報告書 =====
+{cat:"基礎・報告書", q:"当月総製造費用800,000円、期首仕掛品棚卸高100,000円、月末仕掛品棚卸高120,000円のとき、当月製品製造原価（売上原価の基礎となる完成品原価）はいくらか。",
+choices:["800,000円","780,000円","820,000円","900,000円"], ans:1,
+ex:"当月製品製造原価＝当月総製造費用＋期首仕掛品−月末仕掛品\n＝800,000＋100,000−120,000＝780,000円。\n製造原価報告書の基本形。"},
+{cat:"基礎・報告書", q:"次のうち、原価計算の目的として適切でないものはどれか。",
+choices:["財務諸表作成のための原価の算定","製品の価格決定のための資料提供","原価管理のための資料提供","株価算定のための原価の算定"], ans:3,
+ex:"原価計算の目的は、①財務諸表作成、②価格決定、③原価管理、④予算編成・統制、⑤経営基本計画の設定など。\n株価の算定は原価計算の目的には含まれない。"},
+{cat:"基礎・報告書", q:"生産量が販売量より多い期において、全部原価計算による営業利益と直接原価計算による営業利益を比べると、一般にどうなるか。",
+choices:["全部原価計算の方が大きい","直接原価計算の方が大きい","必ず等しくなる","比較できない"], ans:0,
+ex:"全部原価計算では固定製造間接費の一部が期末在庫に繰り延べられる。\n生産量＞販売量（在庫が増える）と、その分だけ全部原価計算の利益が大きくなる。\n逆に在庫が減る期は直接原価計算の方が大きくなる。"}
+];
+
+const LS_KEY = "zensho_cost_v1";
+let stats = JSON.parse(localStorage.getItem(LS_KEY) || '{"total":0,"correct":0,"cats":{},"wrong":[]}');
+let quizList = [], quizIdx = 0, quizCorrect = 0, answered = false;
+
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(stats));}
+function rate(t,c){ return t===0? "―": Math.round(c/t*100)+"%";}
+
+function renderHome(){
+document.getElementById("totalRate").textContent = rate(stats.total, stats.correct);
+document.getElementById("totalCount").textContent = stats.total===0? "まだ問題を解いていません": stats.total+"問中 "+stats.correct+"問正解";
+const cats = [...new Set(QUESTIONS.map(q=>q.cat))];
+let html = "<tr><th>カテゴリ</th><th>正解率</th></tr>";
+cats.forEach(c=>{
+const s = stats.cats[c] || {t:0,c:0};
+html += "<tr><td>"+c+"</td><td>"+rate(s.t,s.c)+(s.t? "（"+s.c+"/"+s.t+"）":"")+"</td></tr>";
+});
+document.getElementById("catTable").innerHTML = html;
+document.getElementById("reviewCount").textContent = stats.wrong.length;
+document.getElementById("reviewBtn").disabled = stats.wrong.length===0;
+}
+
+function showCats(){
+const el = document.getElementById("catBtns");
+if(!el.classList.contains("hidden")){ el.classList.add("hidden"); return;}
+const cats = [...new Set(QUESTIONS.map(q=>q.cat))];
+el.innerHTML = cats.map(c=>{
+const n = QUESTIONS.filter(q=>q.cat===c).length;
+return '<button class="btn btn-sub" onclick="startQuiz(\'cat\',\''+c+'\')">'+c+"（"+n+"問）</button>";
+}).join("");
+el.classList.remove("hidden");
+}
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a;}
+
+function startQuiz(mode, cat){
+if(mode==="all") quizList = shuffle(QUESTIONS.map((q,i)=>i));
+else if(mode==="cat") quizList = shuffle(QUESTIONS.map((q,i)=>i).filter(i=>QUESTIONS[i].cat===cat));
+else if(mode==="review"){ if(stats.wrong.length===0) return; quizList = shuffle([...stats.wrong]);}
+quizIdx = 0; quizCorrect = 0;
+document.getElementById("home").classList.add("hidden");
+document.getElementById("finish").classList.add("hidden");
+document.getElementById("quiz").classList.remove("hidden");
+showQ();
+}
+
+function showQ(){
+answered = false;
+const qi = quizList[quizIdx], q = QUESTIONS[qi];
+document.getElementById("qCat").textContent = q.cat;
+document.getElementById("qProg").textContent = (quizIdx+1)+" / "+quizList.length+"問";
+document.getElementById("qText").textContent = q.q;
+document.getElementById("feedback").classList.add("hidden");
+const order = shuffle(q.choices.map((c,i)=>i));
+document.getElementById("choices").innerHTML = order.map(ci =>
+'<button class="choice" data-ci="'+ci+'" onclick="answer(this,'+qi+','+ci+')">'+q.choices[ci]+"</button>"
+).join("");
+}
+
+function answer(btn, qi, ci){
+if(answered) return; answered = true;
+const q = QUESTIONS[qi], ok = ci===q.ans;
+document.querySelectorAll(".choice").forEach(b=>{
+b.disabled = true;
+if(Number(b.dataset.ci)===q.ans) b.classList.add("correct");
+else if(b===btn) b.classList.add("wrong");
+});
+stats.total++;
+stats.cats[q.cat] = stats.cats[q.cat] || {t:0,c:0};
+stats.cats[q.cat].t++;
+if(ok){
+stats.correct++; stats.cats[q.cat].c++; quizCorrect++;
+stats.wrong = stats.wrong.filter(i=>i!==qi);
+} else {
+if(!stats.wrong.includes(qi)) stats.wrong.push(qi);
+}
+save();
+const rm = document.getElementById("resultMark");
+rm.textContent = ok? "⭕ 正解！": "❌ 不正解（復習リストに入れました）";
+rm.className = "result " + (ok? "ok": "ng");
+document.getElementById("explainText").textContent = "\n" + q.ex;
+document.getElementById("nextBtn").textContent = quizIdx+1>=quizList.length? "結果を見る": "次の問題へ";
+document.getElementById("feedback").classList.remove("hidden");
+}
+
+function nextQ(){
+quizIdx++;
+if(quizIdx>=quizList.length){
+document.getElementById("quiz").classList.add("hidden");
+document.getElementById("finish").classList.remove("hidden");
+document.getElementById("finRate").textContent = Math.round(quizCorrect/quizList.length*100)+"%";
+document.getElementById("finCount").textContent = quizList.length+"問中 "+quizCorrect+"問正解";
+} else showQ();
+}
+
+function goHome(){
+document.getElementById("quiz").classList.add("hidden");
+document.getElementById("finish").classList.add("hidden");
+document.getElementById("home").classList.remove("hidden");
+renderHome();
+}
+
+function resetAll(){
+if(!confirm("記録をすべて消しますか？")) return;
+stats = {total:0,correct:0,cats:{},wrong:[]}; save(); renderHome();
+}
+
+renderHome();
+</script>
+</body>
+</html>
